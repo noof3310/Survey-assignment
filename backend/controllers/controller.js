@@ -1,9 +1,9 @@
 const db = require("../models");
-const User = db.users;
-const Question = db.questions;
-const Answer = db.answers;
+const Users = db.users;
+const Questions = db.questions;
+const Answers = db.answers;
 
-// Create and Save a User to db
+// Create a User
 exports.createUser = (req, res) => {
 
 	const user = {
@@ -12,7 +12,7 @@ exports.createUser = (req, res) => {
 		comment: req.body.comment
 	};
 
-	User.create(user)
+	Users.create(user)
 		.then(data => {
 			res.send(data);
 		})
@@ -27,7 +27,7 @@ exports.createUser = (req, res) => {
 // Get all Users from db
 exports.findAllUsers = (req, res) => {
 
-  User.findAll()
+  Users.findAll()
     .then(data => {
       res.send(data);
     })
@@ -44,7 +44,7 @@ exports.updateUser = (req, res) => {
 
   const id = req.params.id;
 
-  User.update(req.body, {
+  Users.update(req.body, {
     where: { id: id }
   })
     .then(num => {
@@ -66,34 +66,36 @@ exports.updateUser = (req, res) => {
 
 };
 
-// Delete all Users and Answer
+// Delete all Users and Answers
 exports.deleteAllUsers = (req, res) => {
 
-  User.destroy({
+  Users.destroy({
     where: {},
     truncate: false
   })
-    .then(nums => {
-      res.send({ message: `${nums} Users were deleted successfully.` });
+    .then(userNums => {
+      
+      Answer.destroy({
+        where: {},
+        truncate: false
+      })
+        .then(answerNums => {
+          res.send({
+            message: `${userNums} Users and ${answerNums} Answers were deleted successfully.`
+          });
+        })
+        .catch(err => {
+          res.status(500).send({
+            message: `${userNums} Users were deleted successfully but errored deleting Answers`
+          });
+        });
+    
     })
     .catch(err => {
       res.status(500).send({
-        message: "err.message"
+        message: "Errored deleting Users"
       });
     });
-
-  // Answer.destroy({
-  //   where: {},
-  //   truncate: false
-  // })
-  //   .then(nums => {
-  //     res.send({ message: `${nums} Answers were deleted successfully.` });
-  //   })
-  //   .catch(err => {
-  //     res.status(500).send({
-  //       message: "err.message"
-  //     });
-  //   });
 
 };
 
@@ -102,7 +104,7 @@ exports.createQuestion = (req, res) => {
 
   if (!req.body.question || !req.body.choices) {
     res.status(400).send({
-      message: "Content cannot be empty!"
+      message: "Question and Choices cannot be empty!"
     });
     return;
 	}
@@ -112,7 +114,7 @@ exports.createQuestion = (req, res) => {
 		choices: req.body.choices
 	};
 
-	Question.create(question)
+	Questions.create(question)
 		.then(data => {
 			res.send(data);
 		})
@@ -127,7 +129,7 @@ exports.createQuestion = (req, res) => {
 // Get all Questions
 exports.findAllQuestions = (req, res) => {
 
-  Question.findAll()
+  Questions.findAll()
     .then(data => {
       res.send(data);
     })
@@ -144,7 +146,7 @@ exports.updateQuestion = (req, res) => {
 
   const id = req.params.id;
 
-  Question.update(req.body, {
+  Questions.update(req.body, {
     where: { id: id }
   })
     .then(num => {
@@ -166,69 +168,74 @@ exports.updateQuestion = (req, res) => {
 
 };
 
-// Delete all Questions and Answer
+// Delete all Questions and Answers
 exports.deleteAllQuestions = (req, res) => {
-
-  Question.destroy({
+  
+  Questions.destroy({
     where: {},
     truncate: false
   })
-    .then(nums => {
-      res.send({ message: `${nums} Questions were deleted successfully.` });
+    .then(questionNums => {
+      
+      Answers.destroy({
+        where: {},
+        truncate: false
+      })
+        .then(answerNums => {
+          res.send({
+            message: `${questionNums} Questions and ${answerNums} Answers were deleted successfully.`
+          });
+        })
+        .catch(err => {
+          res.status(500).send({
+            message: `${questionNums} Questions were deleted successfully but errored deleting Answers`
+          });
+        });
+    
     })
     .catch(err => {
       res.status(500).send({
-        message: "err.message"
+        message: "Errored deleting Questions"
       });
     });
 
-  // Answer.destroy({
-  //   where: {},
-  //   truncate: false
-  // })
-  //   .then(nums => {
-  //     res.send({ message: `${nums} Answers were deleted successfully.` });
-  //   })
-  //   .catch(err => {
-  //     res.status(500).send({
-  //       message: "err.message"
-  //     });
-  //   });
-
 };
 
-// Create an Answer
-exports.createAnswer = (req, res) => {
+// Create Answers
+exports.createAnswers = (req, res) => {
 
-  if (!req.body.userid || !req.body.qid || !req.body.selectedChoices) {
-    res.status(400).send({
-      message: "Content cannot be empty!"
+  const answers = req.body.answers;
+  let num = 0;
+
+  answers.forEach((question) => {
+
+    question.choices.forEach(choice => {
+      let answer = {
+        uid: question.uid,
+        qid: question.qid,
+        choice: choice
+      }
+      Answers.create(answer)
+        .catch(err => {
+          res.status(500).send({
+            message: err.message
+          });
+        });
+      num += 1;
     });
-    return;
-	}
 
-	const answer = {
-		userid: req.body.userid,
-		qid: req.body.qid,
-		selectedChoices: req.body.selectedChoices
-	};
+  });
 
-	Answer.create(answer)
-		.then(data => {
-			res.send(data);
-		})
-		.catch(err => {
-			res.status(500).send({
-				message: err.message
-			});
-		});
+  res.send({
+    message: `${num} choices selected were added succesfully`
+  });
 
 };
 
 // Get all Answer
 exports.findAllAnswers = (req, res) => {
 
-  Answer.findAll()
+  Answers.findAll()
     .then(data => {
       res.send(data);
     })
@@ -240,10 +247,36 @@ exports.findAllAnswers = (req, res) => {
 
 };
 
-// Delete all Answer
+// Delete an Answer
+exports.deleteAnswer = (req, res) => {
+
+  const qid = req.params.qid;
+  const uid = req.params.uid;
+  const choice = req.params.choice;
+
+  Answers.destroy({
+    where: {
+      qid: qid,
+      uid: uid,
+      choice: choice
+    },
+    truncate: false
+  })
+    .then(nums => {
+      res.send({ message: `Answer was deleted successfully.` });
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: err.message
+      });
+    });
+
+};
+
+// Delete all Answers
 exports.deleteAllAnswers = (req, res) => {
 
-  Answer.destroy({
+  Answers.destroy({
     where: {},
     truncate: false
   })
@@ -252,7 +285,7 @@ exports.deleteAllAnswers = (req, res) => {
     })
     .catch(err => {
       res.status(500).send({
-        message: "err.message"
+        message: err.message
       });
     });
 
