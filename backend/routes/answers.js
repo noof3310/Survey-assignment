@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 const controller = require("../controllers/controller");
 
-// Create an Answer
-router.post("/", controller.createAnswer);
+// Create Answer(s)
+router.post("/", controller.createAnswers);
 
-// Get all Answer
+// Get all Answers
 router.get("/", controller.findAllAnswers);
 
-// Update an Answer
-
+// Delete an Answer
+router.delete("/:uid/:qid/:choice", controller.deleteAnswer);
 
 // Delete all Answer
 router.delete("/", controller.deleteAllAnswers);
