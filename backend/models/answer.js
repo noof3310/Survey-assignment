@@ -1,13 +1,27 @@
 module.exports = (sequelize, Sequelize) => {
     const Answer = sequelize.define("answer", {
-      userid: {
-        type: Sequelize.INTEGER
+      uid: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "users",
+          key: "id"
+        }
       },
       qid: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "questions",
+          key: "id"
+        }
       },
-      selectedChoices: {
-        type: Sequelize.STRING
+      choice: {
+        type: Sequelize.STRING,
+        primaryKey: true,
+        allowNull: false
       }
     });
   
