@@ -11,6 +11,9 @@ router.get("/", controller.findAllUsers);
 // Update a User
 router.put("/:id", controller.updateUser);
 
+// Get all counted ratings
+router.get("/ratings", controller.getCountedRatings);
+
 // Delete all Users
 router.delete("/", controller.deleteAllUsers);
 
