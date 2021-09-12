@@ -2,6 +2,7 @@ const db = require("../models");
 const Users = db.users;
 const Questions = db.questions;
 const Answers = db.answers;
+const sequelize = db.sequelize;
 
 // Create a User
 exports.createUser = (req, res) => {
@@ -24,12 +25,32 @@ exports.createUser = (req, res) => {
 
 };
 
-// Get all Users from db
+// Get all Users
 exports.findAllUsers = (req, res) => {
 
   Users.findAll()
     .then(data => {
       res.send(data);
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: err.message
+      });
+    });
+
+};
+
+// Get all counted ratings
+exports.getCountedRatings = (req, res) => {
+
+  let ratings = [0, 0, 0, 0, 0, 0];
+
+  Users.findAll()
+    .then(users => {
+      users.forEach(user => {
+        if (user.rating != null) ratings[user.rating] += 1;
+      });
+      res.send(ratings);
     })
     .catch(err => {
       res.status(500).send({
@@ -207,9 +228,9 @@ exports.createAnswers = (req, res) => {
   const answers = req.body.answers;
   let num = 0;
 
-  answers.forEach((question) => {
+  answers.forEach(question => {
 
-    question.choices.forEach(choice => {
+    question.choices.split(";").forEach(choice => {
       let answer = {
         uid: question.uid,
         qid: question.qid,
@@ -232,10 +253,13 @@ exports.createAnswers = (req, res) => {
 
 };
 
-// Get all Answer
+// Get all Answers
 exports.findAllAnswers = (req, res) => {
 
-  Answers.findAll()
+  Answers.findAll({
+    attributes: ["qid", "choice", [sequelize.fn("COUNT", sequelize.col("choice")), "count"]],
+    group: ["qid", "choice"]
+  })
     .then(data => {
       res.send(data);
     })
@@ -263,7 +287,9 @@ exports.deleteAnswer = (req, res) => {
     truncate: false
   })
     .then(nums => {
-      res.send({ message: `Answer was deleted successfully.` });
+      res.send({
+        message: `Answer was deleted successfully.`
+      });
     })
     .catch(err => {
       res.status(500).send({
