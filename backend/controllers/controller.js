@@ -225,7 +225,7 @@ exports.deleteAllQuestions = (req, res) => {
 // Create Answers
 exports.createAnswers = (req, res) => {
 
-  const answers = req.body.answers;
+  const answers = req.body;
   let num = 0;
 
   answers.forEach(question => {
